@@ -60,6 +60,7 @@ class VIO(object):
                 return
             print('feature_msg', feature_msg.timestamp)
             result = self.msckf.feature_callback(feature_msg)
+            print("hi")
 
             if result is not None and self.viewer is not None:
                 self.viewer.update_pose(result.cam0_pose)
