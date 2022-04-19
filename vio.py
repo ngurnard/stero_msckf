@@ -6,6 +6,9 @@ from config import ConfigEuRoC
 from image import ImageProcessor
 from msckf import MSCKF
 
+from scipy.spatial.transform import Rotation
+import numpy as np
+
 
 
 class VIO(object):
@@ -26,6 +29,8 @@ class VIO(object):
         self.img_thread.start()
         self.imu_thread.start()
         self.vio_thread.start()
+
+        self.save_data = []
 
     def process_img(self):
         while True:
@@ -57,10 +62,19 @@ class VIO(object):
         while True:
             feature_msg = self.feature_queue.get()
             if feature_msg is None:
+                np.save('msckf_data', np.array(self.save_data))
                 return
-            print('feature_msg', feature_msg.timestamp)
+            # print('feature_msg', feature_msg.timestamp)
             result = self.msckf.feature_callback(feature_msg)
-            print("hi")
+            try: 
+                # quaternion saved here is flipped, ie. in lines with the scipy library
+                timestamp = result.timestamp.copy() * 1e9
+                position = result.pose.t.copy()
+                velocity = result.velocity.copy()
+                quaternion = Rotation.from_matrix(result.pose.R).as_quat()
+                self.save_data.append([timestamp, position, velocity, quaternion])
+            except:
+                pass
 
             if result is not None and self.viewer is not None:
                 self.viewer.update_pose(result.cam0_pose)
