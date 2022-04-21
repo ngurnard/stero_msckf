@@ -10,7 +10,6 @@ from scipy.spatial.transform import Rotation
 import numpy as np
 
 
-
 class VIO(object):
     def __init__(self, config, img_queue, imu_queue, viewer=None):
         self.config = config
@@ -62,19 +61,20 @@ class VIO(object):
         while True:
             feature_msg = self.feature_queue.get()
             if feature_msg is None:
-                np.save('msckf_data', np.array(self.save_data))
+                np.save('./data/filter_outputs/msckf_data', np.array(self.save_data))
                 return
             # print('feature_msg', feature_msg.timestamp)
             result = self.msckf.feature_callback(feature_msg)
-            try: 
+            if result is not None: 
                 # quaternion saved here is flipped, ie. in lines with the scipy library
-                timestamp = result.timestamp.copy() * 1e9
-                position = result.pose.t.copy()
-                velocity = result.velocity.copy()
+                timestamp = result.timestamp * 1e9
+                position = result.pose.t
+                velocity = result.velocity
                 quaternion = Rotation.from_matrix(result.pose.R).as_quat()
                 self.save_data.append([timestamp, position, velocity, quaternion])
-            except:
-                pass
+                # print("\n\n\nself.save_data---------------------\n ", self.save_data, "\n------------------------------")
+            # except:
+            #     pass
 
             if result is not None and self.viewer is not None:
                 self.viewer.update_pose(result.cam0_pose)
@@ -86,10 +86,10 @@ if __name__ == '__main__':
     import argparse
 
     from dataset import EuRoCDataset, DataPublisher
-    from viewer import Viewer
+    # from viewer import Viewer
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', type=str, default='path/to/your/EuRoC_MAV_dataset/MH_01_easy', 
+    parser.add_argument('--path', type=str, default='./data/euroc_mav_dataset/MH_01_easy', 
         help='Path of EuRoC MAV dataset.')
     parser.add_argument('--view', action='store_true', help='Show trajectory.')
     args = parser.parse_args()
