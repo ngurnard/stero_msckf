@@ -951,5 +951,5 @@ class MSCKF(object):
         t_c_w = imu_state.position + T_i_w.R @ imu_state.t_cam0_imu
         T_c_w = Isometry3d(R_w_c.T, t_c_w)
 
-        return namedtuple('vio_result', ['timestamp', 'pose', 'velocity', 'cam0_pose'])(
-            time, T_b_w, body_velocity, T_c_w)
+        return namedtuple('vio_result', ['timestamp', 'pose', 'velocity', 'cam0_pose', 'gyro_bias', 'acc_bias'])(
+            time, T_b_w, body_velocity, T_c_w, imu_state.gyro_bias, imu_state.acc_bias)

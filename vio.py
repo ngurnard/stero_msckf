@@ -30,6 +30,8 @@ class VIO(object):
         self.vio_thread.start()
 
         self.save_data = []
+        self.save_gyro_bias = []
+        self.save_acc_bias = []
 
     def process_img(self):
         while True:
@@ -62,6 +64,8 @@ class VIO(object):
             feature_msg = self.feature_queue.get()
             if feature_msg is None:
                 np.save('./data/filter_outputs/msckf_data', np.array(self.save_data))
+                np.save('./data/filter_outputs/msckf_gyro_bias', np.array(self.save_gyro_bias))
+                np.save('./data/filter_outputs/msckf_acc_bias', np.array(self.save_acc_bias))
                 return
             # print('feature_msg', feature_msg.timestamp)
             result = self.msckf.feature_callback(feature_msg)
@@ -71,7 +75,11 @@ class VIO(object):
                 position = result.pose.t
                 velocity = result.velocity
                 quaternion = Rotation.from_matrix(result.pose.R).as_quat()
+                gyro_bias = result.gyro_bias
+                acc_bias = result.acc_bias
                 self.save_data.append([timestamp, position, velocity, quaternion])
+                self.save_gyro_bias.append(gyro_bias)
+                self.save_acc_bias.append(acc_bias)
                 # print("\n\n\nself.save_data---------------------\n ", self.save_data, "\n------------------------------")
             # except:
             #     pass
